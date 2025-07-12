@@ -1,5 +1,6 @@
 package com.SamWij.todolist;
 
+import com.SamWij.todolist.datamodel.TodoData;
 import com.SamWij.todolist.datamodel.TodoItem;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -41,6 +42,8 @@ public class HelloController {
 		todoItems.add(item1);
 		todoItems.add(item2);
 		todoItems.add(item3);
+
+		TodoData.getInstance().setTodoItems(todoItems);
 
 		todoListView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<TodoItem>() {
 			@Override

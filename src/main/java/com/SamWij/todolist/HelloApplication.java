@@ -1,5 +1,6 @@
 package com.SamWij.todolist;
 
+import com.SamWij.todolist.datamodel.TodoData;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,6 +24,12 @@ public class HelloApplication extends Application {
 
 	@Override
 	public void stop() throws Exception {
-		super.stop();
+
+		try {
+			TodoData.getInstance().storeTodoItems();
+		}catch (IOException e){
+			System.out.println(e.getMessage());
+		}
+
 	}
 }
