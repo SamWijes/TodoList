@@ -31,19 +31,19 @@ public class HelloController {
 	private Label deadlineLabel;
 
 	public void initialize() {
-		TodoItem item1=new TodoItem("Mail BirthDay Card","buy a card",
-				LocalDate.of(2025, Month.APRIL,23));
-		TodoItem item2=new TodoItem("Doctors appointment","Book appointment on 25th june ",
-				LocalDate.of(2020, Month.AUGUST,13));
-		TodoItem item3=new TodoItem("Pick cleaning","dry cleaners closed on 26h call",
-				LocalDate.of(2015, Month.DECEMBER,17));
-
-		todoItems=new ArrayList<>();
-		todoItems.add(item1);
-		todoItems.add(item2);
-		todoItems.add(item3);
-
-		TodoData.getInstance().setTodoItems(todoItems);
+//		TodoItem item1=new TodoItem("Mail BirthDay Card","buy a card",
+//				LocalDate.of(2025, Month.APRIL,23));
+//		TodoItem item2=new TodoItem("Doctors appointment","Book appointment on 25th june ",
+//				LocalDate.of(2020, Month.AUGUST,13));
+//		TodoItem item3=new TodoItem("Pick cleaning","dry cleaners closed on 26h call",
+//				LocalDate.of(2015, Month.DECEMBER,17));
+//
+//		todoItems=new ArrayList<>();
+//		todoItems.add(item1);
+//		todoItems.add(item2);
+//		todoItems.add(item3);
+//
+//		TodoData.getInstance().setTodoItems(todoItems);
 
 		todoListView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<TodoItem>() {
 			@Override
@@ -57,7 +57,7 @@ public class HelloController {
 			}
 		});
 
-		todoListView.getItems().setAll(todoItems);
+		todoListView.getItems().setAll(TodoData.getInstance().getTodoItems());
 		todoListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		todoListView.getSelectionModel().selectFirst();
 	}
