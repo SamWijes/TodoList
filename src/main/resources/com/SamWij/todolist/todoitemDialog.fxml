@@ -8,5 +8,8 @@
 
 <DialogPane xmlns:fx="http://javafx.com/fxml"
         fx:controller="com.SamWij.todolist.DialogController">
+    <headerText>
+        We could put instructions here
+    </headerText>
 
 </DialogPane>
