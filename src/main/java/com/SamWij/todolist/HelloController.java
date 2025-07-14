@@ -8,8 +8,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
+import javafx.util.Callback;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -59,9 +62,32 @@ public class HelloController {
 			}
 		});
 
-		todoListView.getItems().setAll(TodoData.getInstance().getTodoItems());
+		todoListView.setItems(TodoData.getInstance().getTodoItems());
 		todoListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		todoListView.getSelectionModel().selectFirst();
+		todoListView.setCellFactory(new Callback<ListView<TodoItem>, ListCell<TodoItem>>() {
+			@Override
+			public ListCell<TodoItem> call(ListView<TodoItem> todoItemListView) {
+				ListCell<TodoItem> cell = new ListCell<TodoItem>(){  //anonymous class implements callback interface
+					@Override
+					protected void updateItem(TodoItem todoItem, boolean empty) {
+						super.updateItem(todoItem, empty);
+						if (empty){
+							setText(null);
+						}else {
+							setText(todoItem.getShortDescription());
+							if (todoItem.getDeadline().isBefore(LocalDate.now().plusDays(1))) {
+								setTextFill(Color.RED);
+							} else if (todoItem.getDeadline().equals(LocalDate.now().plusDays(1))) {
+								setTextFill(Color.BROWN);
+
+							}
+						}
+					}
+				};
+				return cell;
+			}
+		});
 	}
 
 	@FXML
@@ -87,11 +113,9 @@ public class HelloController {
 		if (result.isPresent() && result.get() == ButtonType.OK) {
 			DialogController controller=fxmlLoader.getController();
 			TodoItem newItem= controller.processResults();
-			todoListView.getItems().setAll(TodoData.getInstance().getTodoItems());
+//			todoListView.getItems().setAll(TodoData.getInstance().getTodoItems());
 			todoListView.getSelectionModel().select(newItem);//select the new value
-			System.out.println("OK Pressed");
-		}else {
-			System.out.println("Cancel Pressed");
+//			System.out.println("OK Pressed");
 		}
 
 	}
