@@ -4,6 +4,7 @@ import com.SamWij.todolist.datamodel.TodoData;
 import com.SamWij.todolist.datamodel.TodoItem;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -18,6 +19,7 @@ import javafx.util.Callback;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,8 +56,7 @@ public class HelloController {
 //
 //		TodoData.getInstance().setTodoItems(todoItems);
 
-
-		listContextMenu = new ContextMenu();
+	listContextMenu = new ContextMenu();
 		MenuItem deleteMenuItem = new MenuItem("Delete");
 		deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -76,10 +77,25 @@ public class HelloController {
 				}
 			}
 		});
+/*
+		instead of using observable arraylist to populate the list view
+		wrap it in s sortedList instance
+		then use the sortedlist to pupulate list view
 
-		todoListView.setItems(TodoData.getInstance().getTodoItems());
+
+*/
+		SortedList<TodoItem> sortedList=new SortedList<TodoItem>(TodoData.getInstance().getTodoItems(),
+				new Comparator<TodoItem>() {
+					@Override
+					public int compare(TodoItem o1, TodoItem o2) {
+						return o1.getDeadline().compareTo(o2.getDeadline());
+					}
+				});
+//		todoListView.setItems(TodoData.getInstance().getTodoItems());
+		todoListView.setItems(sortedList);
 		todoListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		todoListView.getSelectionModel().selectFirst();
+
 		todoListView.setCellFactory(new Callback<ListView<TodoItem>, ListCell<TodoItem>>() {
 			@Override
 			public ListCell<TodoItem> call(ListView<TodoItem> todoItemListView) {
@@ -118,15 +134,15 @@ public class HelloController {
 	public void showNewItemDialog(){
 		Dialog<ButtonType> dialog=new Dialog<>();
 		dialog.initOwner(mainBorderPane.getScene().getWindow());
-		dialog.setTitle("Add new Todo Iem");
-		dialog.setHeaderText("Use this dialog to create new item");
+		dialog.setTitle("Add new Todo Item");
+		dialog.setHeaderText("Use this dialog to create new Item");
 		FXMLLoader fxmlLoader=new FXMLLoader();//get a instanace to access fxml controller
 		fxmlLoader.setLocation(getClass().getResource("todoitemDialog.fxml"));
 		try {
 //			Parent root=FXMLLoader.load(getClass().getResource("todoitemDialog.fxml"));   //this is a static method no control
 			dialog.getDialogPane().setContent(fxmlLoader.load());
 		} catch (IOException e) {
-			System.out.println("Couldnt load the dialog");
+			System.out.println("Couldn't load the dialog");
 			e.printStackTrace();
 			return;
 		}
