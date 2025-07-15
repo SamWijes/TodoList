@@ -2,8 +2,10 @@ package com.SamWij.todolist;
 
 import com.SamWij.todolist.datamodel.TodoData;
 import com.SamWij.todolist.datamodel.TodoItem;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -22,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class HelloController {
 	@FXML
@@ -40,6 +43,12 @@ public class HelloController {
 	private BorderPane mainBorderPane;
 	@FXML
 	private ContextMenu listContextMenu;
+	@FXML
+	private ToggleButton filterToggleButton;
+	private Predicate<TodoItem> wantAllItems;
+	private Predicate<TodoItem> wantTodayItems;
+
+	private FilteredList<TodoItem> filteredList;
 
 	public void initialize() {
 //		TodoItem item1=new TodoItem("Mail BirthDay Card","buy a card",
@@ -56,12 +65,12 @@ public class HelloController {
 //
 //		TodoData.getInstance().setTodoItems(todoItems);
 
-	listContextMenu = new ContextMenu();
+		listContextMenu = new ContextMenu();
 		MenuItem deleteMenuItem = new MenuItem("Delete");
 		deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent actionEvent) {
-				TodoItem item=todoListView.getSelectionModel().getSelectedItem();
+				TodoItem item = todoListView.getSelectionModel().getSelectedItem();
 				deleteItem(item);
 			}
 		});
@@ -70,9 +79,9 @@ public class HelloController {
 			@Override
 			public void changed(ObservableValue<? extends TodoItem> observableValue, TodoItem oldVal, TodoItem newVal) {
 				if (newVal != null) {
-					TodoItem item=todoListView.getSelectionModel().getSelectedItem();
+					TodoItem item = todoListView.getSelectionModel().getSelectedItem();
 					itemDetailsTextArea.setText(item.getDetail());
-					DateTimeFormatter dtf=DateTimeFormatter.ofPattern("MMMM d, yyyy");
+					DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM d, yyyy");
 					deadlineLabel.setText(dtf.format(item.getDeadline()));
 				}
 			}
@@ -81,10 +90,18 @@ public class HelloController {
 		instead of using observable arraylist to populate the list view
 		wrap it in s sortedList instance
 		then use the sortedlist to pupulate list view
-
-
 */
-		SortedList<TodoItem> sortedList=new SortedList<TodoItem>(TodoData.getInstance().getTodoItems(),
+		wantAllItems=new Predicate<TodoItem>() {
+			@Override
+			public boolean test(TodoItem item) {
+				return true;
+			}
+		};
+
+		wantTodayItems=item -> item.getDeadline().equals(LocalDate.now());
+
+		filteredList=new FilteredList<>(TodoData.getInstance().getTodoItems(),wantAllItems);
+		SortedList<TodoItem> sortedList = new SortedList<TodoItem>(filteredList,
 				new Comparator<TodoItem>() {
 					@Override
 					public int compare(TodoItem o1, TodoItem o2) {
@@ -99,13 +116,13 @@ public class HelloController {
 		todoListView.setCellFactory(new Callback<ListView<TodoItem>, ListCell<TodoItem>>() {
 			@Override
 			public ListCell<TodoItem> call(ListView<TodoItem> todoItemListView) {
-				ListCell<TodoItem> cell = new ListCell<TodoItem>(){  //anonymous class implements callback interface
+				ListCell<TodoItem> cell = new ListCell<TodoItem>() {  //anonymous class implements callback interface
 					@Override
 					protected void updateItem(TodoItem todoItem, boolean empty) {
 						super.updateItem(todoItem, empty);
-						if (empty){
+						if (empty) {
 							setText(null);
-						}else {
+						} else {
 							setText(todoItem.getShortDescription());
 							if (todoItem.getDeadline().isBefore(LocalDate.now().plusDays(1))) {
 								setTextFill(Color.RED);
@@ -117,7 +134,7 @@ public class HelloController {
 					}
 				};
 				cell.emptyProperty().addListener(
-						(obs,wasEmpty,isNowEmpty)->{
+						(obs, wasEmpty, isNowEmpty) -> {
 							if (isNowEmpty) {
 								cell.setContextMenu(null);
 							} else {
@@ -131,12 +148,12 @@ public class HelloController {
 	}
 
 	@FXML
-	public void showNewItemDialog(){
-		Dialog<ButtonType> dialog=new Dialog<>();
+	public void showNewItemDialog() {
+		Dialog<ButtonType> dialog = new Dialog<>();
 		dialog.initOwner(mainBorderPane.getScene().getWindow());
 		dialog.setTitle("Add new Todo Item");
 		dialog.setHeaderText("Use this dialog to create new Item");
-		FXMLLoader fxmlLoader=new FXMLLoader();//get a instanace to access fxml controller
+		FXMLLoader fxmlLoader = new FXMLLoader();//get a instanace to access fxml controller
 		fxmlLoader.setLocation(getClass().getResource("todoitemDialog.fxml"));
 		try {
 //			Parent root=FXMLLoader.load(getClass().getResource("todoitemDialog.fxml"));   //this is a static method no control
@@ -149,19 +166,20 @@ public class HelloController {
 		dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
 		dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
 
-		Optional<ButtonType> result=dialog.showAndWait();
+		Optional<ButtonType> result = dialog.showAndWait();
 		if (result.isPresent() && result.get() == ButtonType.OK) {
-			DialogController controller=fxmlLoader.getController();
-			TodoItem newItem= controller.processResults();
+			DialogController controller = fxmlLoader.getController();
+			TodoItem newItem = controller.processResults();
 //			todoListView.getItems().setAll(TodoData.getInstance().getTodoItems());
 			todoListView.getSelectionModel().select(newItem);//select the new value
 //			System.out.println("OK Pressed");
 		}
 
 	}
+
 	@FXML
 	public void handleClickListView() {
-		TodoItem item=  todoListView.getSelectionModel().getSelectedItem();
+		TodoItem item = todoListView.getSelectionModel().getSelectedItem();
 		itemDetailsTextArea.setText(item.getDetail());
 		deadlineLabel.setText(item.getDeadline().toString());
 
@@ -175,7 +193,7 @@ public class HelloController {
 
 	@FXML
 	public void handleKeyPressed(KeyEvent keyEvent) {
-		TodoItem selectedItem=todoListView.getSelectionModel().getSelectedItem();
+		TodoItem selectedItem = todoListView.getSelectionModel().getSelectedItem();
 		if (selectedItem != null) {
 			if (keyEvent.getCode().equals(KeyCode.DELETE))
 				deleteItem(selectedItem);
@@ -183,15 +201,44 @@ public class HelloController {
 		}
 	}
 
+	@FXML
+	public void deleteButton() {
+		TodoItem selectedItem = todoListView.getSelectionModel().getSelectedItem();
+		deleteItem(selectedItem);
+	}
+
 	public void deleteItem(TodoItem item) {
 		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
 		alert.setTitle("Delete todo item");
 		alert.setHeaderText("Delete Item: " + item.getShortDescription());
 		alert.setContentText("Are you sure ?");
-		Optional<ButtonType> result=alert.showAndWait();
+		Optional<ButtonType> result = alert.showAndWait();
 		if (result.isPresent() && result.get().equals(ButtonType.OK)) {
 			TodoData.getInstance().deleteTodoItem(item);
 		}
 	}
 
+	@FXML
+	public void handleFilterButton() {
+		TodoItem selectedItem=todoListView.getSelectionModel().getSelectedItem();
+		if (filterToggleButton.isSelected()) {
+			filteredList.setPredicate(wantTodayItems);
+			if (filteredList.isEmpty()) {
+				itemDetailsTextArea.clear();
+				deadlineLabel.setText("");
+			} else if (filteredList.contains(selectedItem)) {
+				todoListView.getSelectionModel().select(selectedItem);
+			} else {
+				todoListView.getSelectionModel().selectFirst();
+			}
+		} else {
+			filteredList.setPredicate(wantAllItems);
+			todoListView.getSelectionModel().select(selectedItem);
+		}
+
+	}
+
+	public void handleExit() {
+		Platform.exit();
+	}
 }
